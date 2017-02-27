@@ -1,2 +1,2 @@
-# stp
+# stb
 Stacked Thompson Bandits

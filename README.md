@@ -1,0 +1,2 @@
+# stp
+Stacked Thompson Bandits

@@ -146,12 +146,11 @@ def estimate_satisfaction_probability(world, plan):
     return np.mean(plan_sats)
 
 
-directory = "plots/bayes_mc_discrete_seq_markov/{}".format(datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))
+directory = "plots/stp/{}".format(datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))
 if not os.path.exists(directory):
     os.makedirs(directory)
 
 np.random.seed(424242)
-# np.random.seed(123123)
 plt.ion()
 plt.show()
 
@@ -192,7 +191,6 @@ for i in range(0, 10000):
     sat = np.sum(rewards) >= required_reward
     sats.append(sat)
 
-    # TODO: compare Markovian vs. global (i.e. non-Markovian) belief updates
     planner.update_beliefs(plan, rewards)
     # planner.update_beliefs_markovian(plan, rewards)
     # planner.update_beliefs_per_action(plan, rewards)
@@ -215,46 +213,21 @@ for i in range(0, 10000):
 
     sampled_tails.append(
         np.min([planner.safety_belief_dists[d][action].ppf(0.1) for d, action in enumerate(plan)]))
-    '''
-    best_plan_lower_tails.append(
-        np.min([planner.safety_belief_dists[d][action].ppf(0.1) for d, action in enumerate(plan_to_evaluate)]))
-    best_plan_upper_tails.append(
-        np.min([planner.safety_belief_dists[d][action].ppf(0.9) for d, action in enumerate(plan_to_evaluate)]))
-    '''
+
     best_plan_lower_tails.append(planner.safety_belief_dists[0][best_plan[0]].ppf(0.1))
     best_plan_upper_tails.append(planner.safety_belief_dists[0][best_plan[0]].ppf(0.9))
 
     if i % 10 == 0:
-        '''
-        plt.figure(1)
-        plt.clf()
-        plt.scatter(range(len(sats)), sats, color=(1, 0.5, 0, 0.5), label='sat')
-        fractions = [x / (n + 1) for x, n in zip(np.cumsum(sats), range(len(sats)))]
-        plt.scatter(range(len(sats)), fractions, color=(0, 0.5, 1, 0.5), label='P(sat)')
-        sns.despine(offset=10, trim=True)
-        plt.legend(loc='best', fancybox=False, framealpha=0.5)
-        plt.savefig('{}/sample.png'.format(directory))
-        plt.pause(0.001)
 
-        plt.figure(2)
-        '''
         plt.figure(1)
         plt.clf()
-        '''
-        plt.scatter(range(len(best_plan_upper_tails)), best_plan_upper_tails,
-                    color=(1, 0.5, 0, 0.5), label='$\mathrm{B}^\mathrm{0}_\mathrm{0.9}$')
-        plt.scatter(range(len(best_plan_lower_tails)), best_plan_lower_tails,
-                    color=(0, 0.5, 1, 0.5), label='$\mathrm{B}^\mathrm{0}_\mathrm{0.1}$')
-        '''
+
         plt.xlim((-1, len(estimated_sats)))
-        # y_max = np.max(max_p, np.max(estimated_sats))
-        # print(y_max)
-        # plt.ylim((np.min(estimated_sats) - 0.05, y_max + 0.05))
+
         plt.scatter(range(len(estimated_sats)), estimated_sats, color=(1, 0.5, 0, 0.5),
                     label='$\hat{\mathrm{P}}$(sat)')
         plt.scatter(range(len(estimated_sats_best)), estimated_sats_best, color=(0, 0.5, 1, 0.5),
                     label='$\hat{\mathrm{P}}^*$(sat)')
-        # sns.despine(offset=10, trim=True)
         plt.axhline(max_p, ls='--')
         plt.legend(loc='best', fancybox=False, framealpha=0.5)
         plt.savefig('{}/estimation.png'.format(directory))
@@ -271,24 +244,6 @@ for i in range(0, 10000):
         plt.savefig('{}/cvs.png'.format(directory))
         plt.pause(0.001)
 
-        '''
-        plt.figure(3)
-        plt.clf()
-        # TODO: confidence/error bounds of min
-        # TODO: compare best plan belief about p_sat with best plan empirical p_sat
-        d = np.array(estimated_sats) - np.array(best_plan_lower_tails)
-        overestimates = np.cumsum([x < 0 for x in d])
-        fraction_of_overestimates = [overestimates[i] / (i + 1) for i in range(len(overestimates))]
-        plt.scatter(range(len(d)), d, color=(1, 0.5, 0, 0.5), label='P(sat) - $\mathrm{B}^\mathrm{0}_\mathrm{0.1}$')
-        plt.scatter(range(len(fraction_of_overestimates)), fraction_of_overestimates, color=(0, 0.5, 1, 0.5),
-                    label='P(overestimate)')
-        plt.axhline(0, color=(0, 0, 0, 1), ls='--')
-        plt.axhline(0.1, color=(0, 0, 0, 1), ls='--')
-        sns.despine(offset=10, trim=True)
-        plt.legend(loc='best', fancybox=False, framealpha=0.5)
-        plt.savefig('{}/error.png'.format(directory))
-        plt.pause(0.001)
-        '''
 
 plt.ioff()
 plt.show()
